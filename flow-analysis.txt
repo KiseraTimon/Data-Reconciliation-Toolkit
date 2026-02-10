@@ -1,0 +1,27 @@
+# Entry Point
+1. Validation of input:
+    -> If CSV file is provided
+    -> If relevant annotations are provided
+
+# Scanning
+1. Counting:
+    -> Records
+    -> Erronous entries
+    -> Missing data
+
+2. Mapping:
+    -> Storing records in a list
+
+3. Scraping:
+    -> Checking connection
+    -> Parsing record keypoints into the link
+    -> Validating return data
+    -> Cleaning return data
+
+4. Cross Referencing
+    -> Checking for matches between spreadsheet & return data
+    -> Tagging cases
+    -> Updating the list
+
+# Recording
+1. Populating Spreadsheet

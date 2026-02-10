@@ -1,0 +1,329 @@
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+  <title>
+   Ejuris
+  </title>
+  <base href="https://ilaw.kra.go.ke/ilaw/"/>
+  <meta content="width=device-width ,user-scalable=no" name="viewport"/>
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible"/>
+  <link href="./files/images/instance/themes/default/favicon.png?v=147441608" rel="shortcut icon" type="image/icon"/>
+  <script type="text/javascript">
+   localStorage.removeItem("api-access-token");
+  </script>
+  <script language="javascript" type="text/javascript">
+   var style = document.createElement("style");
+    style.type = "text/css";
+    style.id = "antiClickjack";
+    if ("cssText" in style)
+        style.cssText = "body{display:none !important;}";
+    else
+        style.innerHTML = "body{display:none !important;}";
+    document.head.appendChild(style);
+    if (self === top) {
+        var antiClickjack = document.getElementById("antiClickjack");
+        antiClickjack.parentNode.removeChild(antiClickjack)
+    } else {
+        top.location = self.location
+    }
+    var licenseHasExpired = '';
+    var contractLicenseHasExpired = '';
+    var clientLicenseType = 'on-server';
+    var contactUsLink = 'https://sheria360.com/en/company#contact';
+    var notificationRefreshInterval = '';
+    var remindersRefreshInterval = '';
+    var authIdLoggedIn = '';
+    var sqlsrv2008 = '';
+    var planExcludedFeatures = '';
+    var planFeatureWarningMsgs = '{"In-line-Word-Editor":"This feature is available in Business and Enterprise Editions only. Contact your administrator to upgrade.","Document-Automation-&-Templates":"This feature is available in Business and Enterprise Editions only. Contact your administrator to upgrade.","Multi-entities-Accounting":"This feature is available in Business and Enterprise Editions only. Contact your administrator to upgrade.","Advanced-Permissions":"This feature is available in Business and Enterprise Editions only. Contact your administrator to upgrade.","In-Document-Search":"This feature is available in Enterprise Edition only. Contact your administrator to upgrade.","Advanced-Workflows-&-Approvals":"This feature is available in Enterprise Edition only. Contact your administrator to upgrade.","LDAP-User-Management-Integration":"This feature is available in Enterprise Edition only. Contact your administrator to upgrade.","Azure-User-Management-Integration":"This feature is available in Enterprise Edition only. Contact your administrator to upgrade.","Service-Level-Agreement":"This feature is available in Enterprise Edition only. Contact your administrator to upgrade."}';
+    var licensePackage = '';
+    var recentVisitedLang = 'Recently Visited';
+    var userGuide = '';
+        var workthrough = [];
+    ;
+    var firstSignIn = 'no';
+    if(firstSignIn == 'NULL') firstSignIn = '';
+    var APPENVIRONMENT = 'production';
+    var isloggedIn = 'noLogged';
+    var userLanguage = 'english';
+    
+    var _tokenGlobal = '';
+    var allowedDecimalFormatGlobal = 2;
+    var chatbotAnable = false;
+    // Insert default generator template
+    function addDefaultGeneratorTemplate(reference) {
+        let url = getBaseURL().concat('document_generator/add_default_generator_template');
+        jQuery.ajax({
+            url: url,
+            data: {reference: reference},
+            dataType: 'JSON',
+            type: 'POST',
+            beforeSend: function () {
+                jQuery('#loader-global').show();
+            },
+            success: function (response) {
+                pinesMessage({ty: 'success', m: _lang.feedback_messages.templateAddedSuccessfully});
+            }, complete: function () {
+                jQuery('#loader-global').hide();
+            },
+            error: defaultAjaxJSONErrorsHandler
+        });
+    }
+  </script>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/jquery/css/tooltipster.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/jquery/css/chosen.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/jquery/css/animate.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/bootstrap/css/bootstrap4.6.1.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/jquery/css/theme/ui-1.11.1.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/styles/main.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/styles/common_main.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/styles/ltr/main.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/styles/ltr/override.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/bootstrap/select/css/bootstrap-select.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/bootstrap/select/css/bootstrap-select1.13.18.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/bootstrap/toggle/css/bootstrap-toggle.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/fontawesome/css/all.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/typeahead/css/typeahead.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/jquery/css/selectize.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/bootstrap/date-picker/css/bootstrap-datepicker1.9.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/styles/override.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/jquery/css/jquery.timepicker.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/jquery/css/validationEngine.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/styles/print.css?r=9.3.0.o092" media="print" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/navbar/css/font-awesome.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <link href="https://ilaw.kra.go.ke/ilaw/assets/intro/introjs.min.css?r=9.3.0.o092" rel="stylesheet" type="text/css"/>
+  <!--[if gte IE 9]>
+<style type="text/css">
+.gradient {filter: none;}
+</style>
+<![endif]-->
+  <!--[if lt IE 9]>
+<style>
+.navbar-collapse.collapse {height: auto; overflow: visible;}
+.form-control{min-height:20px;}
+</style>
+<![endif]-->
+  <!--[if !IE 7]>
+<style type="text/css">
+/*#wrap {display:table;height:100%}*/
+</style>
+<![endif]-->
+  <script type="text/javascript">
+   document.write("<script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/jquery-3.6.0.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/jquery.tooltipster.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/jquery-migrate-3.3.2.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/compressedScripts/libraries1.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/bootstrap/js/bootstrap4.6.1.bundle.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/compressedScripts/libraries2.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/bootstrap/select/bootstrap-select.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/bootstrap/select/bootstrap-select1.13.18.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/bootstrap/toggle/js/bootstrap-toggle.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/typeahead/typeahead.bundle.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/selectize.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/jquery.scrollTo.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/hijri/moment.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/hijri/moment-hijri.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/bootstrap/date-picker/bootstrap-datepicker1.9.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/bootstrap/date-picker/bootstrap-datepicker.english.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/datepair/datepair.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/datepair/jquery.datepair.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/jquery.easing.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/scripts/lang.english.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/languages/validationEngine-english.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/jquery/tinymce/tinymce.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/intro/intro.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/scripts/documents_general.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/scripts/common.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/scripts/walkthrough.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/scripts/general.min.js?v=9.3.0.o092' ><\/script><script type='text/javascript' src='https://ilaw.kra.go.ke/ilaw/assets/scripts/helpers.min.js?v=9.3.0.o092' ><\/script>");
+  </script>
+  <script type="text/javascript">
+   //initializing bootstrapDP to be used instead of datepicker to avoid the conflict that occurs between jquery and bootstrap
+        var datepicker = jQuery.fn.datepicker.noConflict();
+        jQuery.fn.bootstrapDP = datepicker;
+        initApiAccessToken();
+  </script>
+  <link href="https://ilaw.kra.go.ke/ilaw/files/app_themes/default/default.css?v=147441608" rel="stylesheet"/>
+ </head>
+ <body>
+  <div id="universal-search-slide" style="width: 0">
+   <div id="universal-search-container">
+    <div class="navbar-form1 navbar-left no-padding width-100 padding-15" id="quick-search">
+     <div class="form-group">
+      <label class="sr-only" for="search">
+       Search
+      </label>
+      <input class="form-control line" id="universal-search-input" name="universal_search" onkeyup="universalSearch(jQuery(this), event.keyCode);" placeholder="Universal Search" type="text" value=""/>
+      <span class="form-control-feedback cursor-pointer-click" onclick="universalSearch(jQuery('#universal-search-input'), event.keyCode, true)">
+       <i class="fa fa-search purple_color font-16">
+       </i>
+      </span>
+     </div>
+    </div>
+    <div id="search-related-object-view">
+     <div class="col-md-12">
+      <h4 class="mb-15 no-margin-top">
+       <strong>
+        Recently Visited
+       </strong>
+      </h4>
+     </div>
+     <div id="universal-loading">
+     </div>
+    </div>
+   </div>
+  </div>
+  <div class="d-none" id="universal-search-slide-wrapper">
+  </div>
+  <input id="display-whats-new" type="hidden" value=""/>
+  <div id="loader-global">
+   <div class="loader">
+    <div>
+     <div>
+     </div>
+    </div>
+    <div>
+     <div>
+     </div>
+    </div>
+    <div>
+     <div>
+     </div>
+    </div>
+    <div>
+     <div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div class="no-margin" id="wrap">
+   <!-- Begin page content -->
+   <div class="sign-in-container col-md-12 no-padding" style="margin-top:40px;">
+    <div class="col-md-12 col-xs-12 margin-bottom money-container-override" id="main-container">
+     <div class="col-md-12 login-container">
+      <form accept-charset="utf-8" action="https://ilaw.kra.go.ke/ilaw/users/login" class="user-centered-form" id="loginForm" method="post" name="loginForm">
+       <div class="col-md-12 no-padding form-group row no-margin mb-10">
+        <div class="col-md-1 no-margin">
+        </div>
+        <div class="col-md-10 logo">
+         <img alt="app4legal" id="image" src="assets/images/a4l_logo_sign_in.png"/>
+        </div>
+        <div class="col-md-1 no-margin">
+        </div>
+       </div>
+       <input id="hashPart" name="hashPart" type="hidden" value=""/>
+       <input class="d-none" name="redirect_to" type="text" value=""/>
+       <div class="col-md-12 no-padding form-group login_form_div">
+        <input autofocus="1" class="form-control form-field" id="username" name="username" placeholder="User Login" type="text" value=""/>
+       </div>
+       <div class="col-md-12 no-padding form-group login_form_div">
+        <input autocomplete="stop" class="form-control form-field" id="password" name="password" onkeypress="capLock(event)" placeholder="Password" type="password" value=""/>
+       </div>
+       <div class="col-md-12 no-padding form-group row no-margin">
+        <div class="col-md-6 col-xs-6 no-padding">
+        </div>
+        <div class="col-md-6 col-xs-6 no-padding forget-password-container">
+         <a href="javascript:;" onclick="forgotPassword();">
+          Forgot your password?
+         </a>
+        </div>
+       </div>
+       <div class="col-md-12 no-padding margin-bottom">
+        <input class="btn form-control btn-default btn-info login" name="login" type="submit" value="Sign In"/>
+       </div>
+       <div class="col-md-12 no-padding form-group form-error response-msg">
+       </div>
+      </form>
+      <div class="login-page-footer">
+       <div class="col-md-12 text-center copyright">
+        <span>
+         All Rights Reserved © 2026 - App4Legal
+        </span>
+       </div>
+      </div>
+     </div>
+     <script language="Javascript">
+      var redirectUrl = document.location.href;
+    var urlHash = redirectUrl.split("#")[1];
+    jQuery('#hashPart').val(urlHash);
+    function capLock(e) {
+        var data = jQuery('#password').val();
+        if (data.length === 0) {
+            kc = e.keyCode ? e.keyCode : e.which;
+            sk = e.shiftKey ? e.shiftKey : ((kc == 16) ? true : false);
+            if (((kc >= 65 && kc <= 90) && !sk) || ((kc >= 97 && kc <= 122) && sk))
+                pinesMessage({ty: 'warning', m: _lang.feedback_messages.capsLockOn});
+        } else if (e.which == 13) {
+            jQuery('#loginForm').submit();
+        }
+
+    }
+    /*
+     * Forget Password Actions
+     * On click on forget password link will send the valid email address of the login input a reset password email(if the email is not banned neither an AD user)
+     * An inline message will be displayed for response messages according to different conditions
+     */
+    function forgotPassword() {
+        var username = jQuery('#username').val();
+        if (!username) {
+            if (jQuery('.success-msg').length > 0) {
+                jQuery('.success-msg').text('');
+                jQuery('.form-error', '#loginForm').removeClass('success-msg').addClass('response-msg');
+            }
+            jQuery('.response-msg').text(_lang.feedback_messages.missingUserLogin);
+        } else {
+            jQuery.ajax({
+                url: getBaseURL() + 'pages/reset_password',
+                type: 'POST',
+                dataType: 'JSON',
+                data: {username: username},
+                beforeSend: function() {
+                    jQuery("#loader-global").show();
+                    if (jQuery('.success-msg').length > 0) {
+                        jQuery('.success-msg').text('');
+                        jQuery('.form-error', '#loginForm').removeClass('success-msg').addClass('response-msg');
+                    } else {
+                        jQuery('.response-msg').text('');
+                    }
+                    jQuery('.login-form-error-message-span').text('');
+                },
+                success: function(response) {
+                    jQuery("#loader-global").hide();
+                    if (response.isAdUser) { //active directory user
+                        jQuery('.response-msg').text(_lang.feedback_messages.ADUserCantChangePass).sprintf(_lang.feedback_messages.activeDirectory);
+                    } else if (response.isIdpUser) { //banned user
+                        jQuery('.response-msg').text(_lang.feedback_messages.ADUserCantChangePass).sprintf(_lang.feedback_messages.azureAd);
+                    }  else if (response.bannedUser) { //banned user
+                        jQuery('.response-msg').text(_lang.feedback_messages.bannedUserResetPass);
+                    } else if (response.unAvailableUserLogin) { //user login is not available
+                        jQuery('.response-msg').text(_lang.feedback_messages.unAvailableUserLogin);
+                    } else if (!response.emailSent) { //email not sent
+                        jQuery('.response-msg').text(_lang.feedback_messages.emailNotSent);
+                    } else if (response.emailSent) { //email sent
+                        jQuery('.response-msg').text(_lang.feedback_messages.resetPasslEmailSent).addClass('success-msg');
+                    }
+                }
+            });
+        }
+    }
+    jQuery(document).ready(function() {
+        logoPosition();
+        jQuery("form#loginForm").validationEngine({validationEventTrigger: "submit", autoPositionUpdate: true, promptPosition: 'bottomRight', scroll: false});
+        jQuery(window).resize(function() {
+            jQuery("#image").width(jQuery(".logo").width());
+            logoPosition();
+
+        });
+    });
+     </script>
+    </div>
+   </div>
+  </div>
+  <script>
+   jQuery(document).ready(function(e){
+		if('nothing-yet' == 'pages'){
+			var rSegment_2 = 'login';
+			jQuery('.'+rSegment_2+'Tab').addClass('external-portal-active-nav');
+		}else
+			jQuery('.nothing-yet', '#top-nav-item-list').addClass('active');
+	});
+  </script>
+  <a class="scrollToTop" href="#">
+  </a>
+ </body>
+ <!--[if gte IE 9]>
+<style type="text/css">
+.gradient {filter: none;}
+</style>
+<![endif]-->
+ <!--[if lt IE 9]>
+<style>
+.navbar-collapse.collapse {height: auto; overflow: visible;}
+.form-control{min-height:20px;}
+</style>
+<![endif]-->
+ <!--[if !IE 7]>
+<style type="text/css">
+/*#wrap {display:table;height:100%}*/
+</style>
+<![endif]-->
+ <script type="text/javascript">
+  document.write("");
+ </script>
+</html>
