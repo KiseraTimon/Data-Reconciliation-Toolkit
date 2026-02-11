@@ -20,3 +20,6 @@ wheels/
 **secrets**
 **/config/**
 **.env
+
+# Reports
+**/reports/**
