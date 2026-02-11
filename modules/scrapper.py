@@ -24,7 +24,7 @@ class Scrapper:
         auth_url: str = "",
         url: str = "",
         keyword: str = "",
-        data: list = [],
+        data: list | None = None,
         username: str = "",
         password: str = "",
     ):
@@ -255,7 +255,7 @@ class Scrapper:
         print("\n✅ Comparison complete.")
         return reconciled_data
 
-    def report(self, data: list = []) -> bool:
+    def report(self, data: list | None = None) -> bool:
         """
         Saves the final reconciled data to CSV/Excel
         """
@@ -280,7 +280,9 @@ class Scrapper:
                 "confidence_score": "Confidence",
                 "best_match_kra_ref": "Closest I. Ref Match",
                 "best_match_kra_citation": "Closest Citation Match"
-            }
+            },
+
+            inplace=True
         )
 
         # Timestamping
