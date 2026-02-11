@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import requests
 
 from utils import errhandler, syshandler
-from helpers import clean_citation, get_court_type
+from helpers import clean_citation, clean_citation_text, get_court_type
 
 from pathlib import Path
 from typing import Optional
@@ -162,92 +162,89 @@ class Scrapper:
         self,
         extracted_data: list
     ) -> list:
-        """
-        Analyzes the extracted data to determine if a valid match was found
-        based on text similarity.
-        """
         print(f"\n⚖️  Comparing {len(extracted_data)} records against KRA results...")
         reconciled_data = []
 
         for item in extracted_data:
-
-            # Prepare strings for comparison (Uppercase for consistency)
+            # 1. Preparing Sheet Data
             sheet_citation_raw = str(item.get('case_name', '')).upper()
             sheet_case = item.get('original_case', 'Unknown')
 
-            sheet_token = clean_citation(sheet_citation_raw)
-            matches = item.get('matches', [])
+            # Strategy A: Token Set (Good for scrambled order)
+            sheet_tokens = clean_citation(sheet_citation_raw)
+
+            # Strategy B: Clean String (Good for mashed text)
+            sheet_string = clean_citation_text(sheet_citation_raw)
 
             sheet_court = get_court_type(sheet_case)
+            matches = item.get('matches', [])
 
-            print(f"\n🏁 Reconciling for: [{sheet_case}] {sheet_token}")
+            print(f"\n🏁 Reconciling: [{sheet_case}] {sheet_string}")
 
-            # Default Status
-            status = "NOT FOUND"
-            confidence = 0.0
+            # --- STRICT STATUS DEFAULTS ---
             best_match_details = {}
+            confidence = 0.0
 
-            # CONDITION 1: If there are no matches
+            # CASE 1: NOT FOUND (Zero results returned)
             if not matches:
+                status = "NOT FOUND"
                 print(f"❌ No matches found in system.")
 
             else:
+                # Defaulting to MISMATCH until proven otherwise
+                status = "MISMATCH"
                 best_ratio = 0.0
 
                 for match in matches:
                     kra_citation_raw = str(match.get('kra_citation', '')).upper()
-                    kra_token = clean_citation(kra_citation_raw)
 
+                    # Check Court Compatibility
                     kra_court = get_court_type(kra_citation_raw)
-
                     if sheet_court != 'NA' and kra_court != 'NA':
                         if sheet_court != kra_court:
-                            # Skips the match immediately as it is the wrong court
-                            continue
+                            continue # Wrong court, skip this specific match
 
-                    if not sheet_token:
-                        current_ratio = 0.0
-                    else:
-                        """
-                        Fuzzy Token Matching Logic
+                    # --- SCORING ---
 
-                        Not just the intersection is checked, but also similarity of words.
-                        """
-                        matched_token_count = 0
-                        for s_token in sheet_token:
-                            best_word_score = 0.0
+                    # Score A: Fuzzy Token Matching (Word vs Word)
+                    kra_tokens = clean_citation(kra_citation_raw)
+                    token_ratio = 0.0
+                    if sheet_tokens and kra_tokens:
+                        matched_count = 0
+                        for s_t in sheet_tokens:
+                            best_w = 0.0
+                            for k_t in kra_tokens:
+                                sim = SequenceMatcher(None, s_t, k_t).ratio()
+                                if sim > best_w: best_w = sim
+                            if best_w > 0.85: matched_count += 1
+                        token_ratio = matched_count / len(sheet_tokens)
 
-                            for k_token in kra_token:
-                                sim = SequenceMatcher(None, s_token, k_token).ratio()
-                                if sim > best_word_score:
-                                    best_word_score = sim
+                    # Score B: Whole String Matching
+                    kra_string = clean_citation_text(kra_citation_raw)
+                    string_ratio = SequenceMatcher(None, sheet_string, kra_string).ratio()
 
-                            if best_word_score > 0.80:
-                                matched_token_count += 1
+                    # FINAL SCORE: Take the higher of the two
+                    final_ratio = max(token_ratio, string_ratio)
 
-                        current_ratio = matched_token_count / len(sheet_token)
-
-                    if current_ratio > best_ratio:
-                        best_ratio = current_ratio
+                    if final_ratio > best_ratio:
+                        best_ratio = final_ratio
                         best_match_details = match
 
-                # Converting ratio to percentage
                 confidence = round(best_ratio * 100, 2)
 
-                # Logic to Tag the Result
+                # CASE 2, 3, 4: FOUND (Classification based on score)
                 if confidence >= 85:
-                    # High confidence
                     status = "VERIFIED MATCH"
                 elif confidence >= 50:
-                    # Likely match, but spelling differs
                     status = "REVIEW REQUIRED"
                 else:
-                    # Found results, but names are totally difference
                     status = "MISMATCH"
 
                 print(f"📊 Result: {status} ({confidence}%)")
+                if best_match_details:
+                    print(f"🥅 Matched: {best_match_details.get('kra_citation', '')}")
 
-            # Updating the item with analysis results
+            # Update item
             item['status'] = status
             item['confidence_score'] = f"{confidence}%"
             item['best_match_kra_ref'] = best_match_details.get('kra_ref', 'N/A')
@@ -255,8 +252,7 @@ class Scrapper:
 
             reconciled_data.append(item)
 
-        print("✅ Comparison complete.")
-
+        print("\n✅ Comparison complete.")
         return reconciled_data
 
     def report(self, data: list = []) -> bool:
@@ -273,6 +269,20 @@ class Scrapper:
         if 'matches' in df.columns:
             df = df.drop(columns=['matches'])
 
+        # Renaming Columns
+        df.rename(
+            columns={
+                "original_case": "Case Number",
+                "case_name": "Citation",
+                "search_keyword": "Search Keyword",
+                "matches_found": "Matches Found",
+                "status": "Status",
+                "confidence_score": "Confidence",
+                "best_match_kra_ref": "Closest I. Ref Match",
+                "best_match_kra_citation": "Closest Citation Match"
+            }
+        )
+
         # Timestamping
         timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
@@ -283,6 +293,7 @@ class Scrapper:
         save_dir.mkdir(parents=True, exist_ok=True)
 
         output_path = save_dir / f"reconciliation_report_{timestamp}.xlsx"
+        resolved_output_path = output_path.resolve()
 
         print(f"\nAttempting to save to: {output_path.resolve()}")
 
@@ -294,7 +305,7 @@ class Scrapper:
 
             return False
         else:
-            syshandler(f"📁 Reconciliation report has been generated & saved to {output_path.resolve()}", log="report", path="scrapper")
+            syshandler(f"Reconciliation report has been generated & saved to {output_path.resolve()}", log="report", path="scrapper")
 
             return True
 

@@ -12,36 +12,62 @@ def find_column(df, possible_names):
             return name
     return None
 
+# Noise Keywords
+def get_noise_words():
+    return {
+        "VS", "VERSUS", "KENYA", "REVENUE", "AUTHORITY", "KRA",
+        "COMMISSIONER", "COMMISIONER", "LEGAL", "NAIROBI", "TAT",
+        "HCITA", "HCCOMMITA", "HCC", "NO", "OF", "LIMITED", "LTD",
+        "DOMESTIC", "TAXES", "MISC", "AND", "FOR", "CUSTOMS",
+        "INVESTIGATION", "BOARD", "SERVICES", "COORDINATION",
+        "UNDER", "RECEIVABLE", "IN", "RECEIVERSHIP", "BORDER CONTROL", "BORDER",
+        "LARGE AND SMALL", "LARGE & SMALL", "TAXPAYERS"
+    }
+
 # Citation Cleaner
 def clean_citation(text: str) -> set:
-        """
-        Cleans text and returns a SET of unique meaningful words (Tokens).
-        """
-        if not text:
-            return set()
+    """
+    Returns a SET of unique meaningful words (Order is lost).
+    Good for: 'John Doe vs KRA' matching 'KRA vs John Doe'
+    """
+    if not text:
+        return set()
 
-        text = text.upper()
+    text = text.upper()
 
-        # 1. Regex to remove Case Numbers (e.g., E031 OF 2026, 123/2025)
-        text = re.sub(r'[A-Z]?\d+\s+OF\s+\d{4}', '', text)
+    # Removing Case Numbers & Years
+    text = re.sub(r'[A-Z]?\d+\s+OF\s+\d{4}', '', text)
+    text = re.sub(r'\d{4}', '', text)
 
-        # 2. Removing loose years
-        text = re.sub(r'\d{4}', '', text)
+    # Removing special chars
+    text = re.sub(r'[^A-Z\s]', '', text)
 
-        # 3. Removing special chars
-        text = re.sub(r'[^A-Z\s]', '', text)
+    words = set(text.split())
+    return words - get_noise_words()
 
-        # 4. Defining Noise Words to ignore
-        noise_words = {
-            "VS", "VERSUS", "KENYA", "REVENUE", "AUTHORITY", "KRA", "COMMISSIONER", "COMMISIONER", "COMISSIONER", "COMISIONER", "LEGAL", "NAIROBI", "TAT", "HCITA", "HCCOMMITA", "HCC", "NO", "OF", "LIMITED", "LTD", "DOMESTIC", "TAXES", "MISC", "AND", "FOR", "CUSTOMS", "INVESTIGATION", "INVESTIGATIONS", "I&E", "BOARD SERVICES", "BOARD COORDINATION", "UNDER RECEIVABLE"
-        }
+def clean_citation_text(text: str) -> str:
+    """
+    Returns a CLEAN STRING (Order preserved).
+    Good for: 'ABCXYZ' matching 'ABC XYZ'
+    """
+    if not text:
+        return ""
 
-        # 5. Creating Token Set
-        words = set(text.split())
+    text = text.upper()
 
-        # 6. Returning meaningful words only
-        clean_tokens = words - noise_words
-        return clean_tokens
+    # Removing Case Numbers & Years
+    text = re.sub(r'[A-Z]?\d+\s+OF\s+\d{4}', '', text)
+    text = re.sub(r'\d{4}', '', text)
+
+    # Removing special chars
+    text = re.sub(r'[^A-Z\s]', ' ', text) # Replace with space to prevent accidental mashing
+
+    # Removing noise words using regex to preserve sentence structure
+    noise = get_noise_words()
+    words = text.split()
+    cleaned_words = [w for w in words if w not in noise]
+
+    return " ".join(cleaned_words)
 
 def get_court_type(text: str) -> str:
         """
