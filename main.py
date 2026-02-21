@@ -2,6 +2,10 @@ from modules import Scanner, Scrapper, Validator
 
 from utils import errhandler
 
+from secret import credentials
+
+USER = credentials()
+
 def pipeline():
     print("\n###\nWelcome to our Data Reconciliation Pipeline\n")
 
@@ -61,10 +65,8 @@ def pipeline():
 
     # --- Scraping Phase ---
     scrapper = Scrapper(
-        username=str(input("Enter your username to proceed: ")),
-        password=str(input("Enter your password to proceed: ")),
-        auth_url=str(input("Enter the URL for authenticating to the system. Leave blank for default: ")),
-        url=str(input("Enter the URL for querying the database. Leave blank for default: ")),
+        username=USER['username'],
+        password=USER['password'],
         data=file_data
     )
 
@@ -101,7 +103,10 @@ def pipeline():
 
     # --- Reporting ---
 
-    if not scrapper.report(data=reconciled_data):
+    if not scrapper.report(
+        data=reconciled_data,
+        file_path=file_path
+    ):
         print("❌ A reconciliation report could not be drafted for your review")
 
         return
