@@ -6,10 +6,16 @@ import re
 # Column Checker
 def find_column(df, possible_names):
     """Finds column by checking multiple possible names"""
-
+    
+    # Convert all column names to strings for comparison
+    df_columns = [str(col).strip() for col in df.columns]
+    
     for name in possible_names:
-        if name in df.columns:
-            return name
+        if name in df_columns:
+            # Find the original column name (might be different case)
+            for original_col in df.columns:
+                if str(original_col).strip() == name:
+                    return original_col
     return None
 
 # Noise Keywords
@@ -25,15 +31,16 @@ def get_noise_words():
     }
 
 # Citation Cleaner
-def clean_citation(text: str) -> set:
+def clean_citation(text) -> set:
     """
     Returns a SET of unique meaningful words (Order is lost).
     Good for: 'John Doe vs KRA' matching 'KRA vs John Doe'
     """
-    if not text:
+    if text is None or pd.isna(text):
         return set()
-
-    text = text.upper()
+    
+    # Convert to string if not already
+    text = str(text).upper()
 
     # Removing Case Numbers & Years
     text = re.sub(r'[A-Z]?\d+\s+OF\s+\d{4}', '', text)
@@ -45,15 +52,16 @@ def clean_citation(text: str) -> set:
     words = set(text.split())
     return words - get_noise_words()
 
-def clean_citation_text(text: str) -> str:
+def clean_citation_text(text) -> str:
     """
     Returns a CLEAN STRING (Order preserved).
     Good for: 'ABCXYZ' matching 'ABC XYZ'
     """
-    if not text:
+    if text is None or pd.isna(text):
         return ""
 
-    text = text.upper()
+    # Convert to string if not already
+    text = str(text).upper()
 
     # Removing Case Numbers & Years
     text = re.sub(r'[A-Z]?\d+\s+OF\s+\d{4}', '', text)
@@ -69,28 +77,32 @@ def clean_citation_text(text: str) -> str:
 
     return " ".join(cleaned_words)
 
-def get_court_type(text: str) -> str:
-        """
-        Heuristic to identify court type from a case string.
-        Returns: 'TAT', 'HC', 'CA', 'SU', or 'NA'
-        """
-        text = text.upper()
-
-        # 1. Tax Appeals Tribunal
-        if any(x in text for x in ['TAT', 'TAX APPEAL', 'TATC', 'TATMISC']):
-            return 'TAT'
-
-        # 2. Supreme Court
-        if 'SUPREME' in text or 'SCORK' in text:
-            return 'SU'
-
-        # 3. Court of Appeal
-        if any(x in text for x in ['CACA', 'COURT OF APPEAL']):
-            return 'CA'
-
-        # 4. High Court (Catch-all for HC variants)
-        # HCCC, HCITA, HCCHRPET, HCCOMM, ELRC, JR, ETC.
-        if any(x in text for x in ['HC', 'HIGH COURT', "COMMITA", "HCITA", 'ELRC', 'JR ', 'MISC', 'HRPET', 'CTA']):
-            return 'HC'
-
+def get_court_type(text) -> str:
+    """
+    Heuristic to identify court type from a case string.
+    Returns: 'TAT', 'HC', 'CA', 'SU', or 'NA'
+    """
+    if text is None or pd.isna(text):
         return "NA"
+    
+    # Convert to string if not already
+    text = str(text).upper()
+
+    # 1. Tax Appeals Tribunal
+    if any(x in text for x in ['TAT', 'TAX APPEAL', 'TATC', 'TATMISC']):
+        return 'TAT'
+
+    # 2. Supreme Court
+    if 'SUPREME' in text or 'SCORK' in text:
+        return 'SU'
+
+    # 3. Court of Appeal
+    if any(x in text for x in ['CACA', 'COURT OF APPEAL']):
+        return 'CA'
+
+    # 4. High Court (Catch-all for HC variants)
+    # HCCC, HCITA, HCCHRPET, HCCOMM, ELRC, JR, ETC.
+    if any(x in text for x in ['HC', 'HIGH COURT', "COMMITA", "HCITA", 'ELRC', 'JR ', 'MISC', 'HRPET', 'CTA']):
+        return 'HC'
+
+    return "NA"
