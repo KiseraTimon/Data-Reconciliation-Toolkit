@@ -17,7 +17,7 @@ A **modern, enterprise-grade** data reconciliation system designed for legal pro
 - **Court-Type Filtering**: Automatically identifies and filters by court type (TAT, HC, CA, SU)
 - **Confidence Scoring**: Calculates match confidence percentage for each case
 
-### 🤖 AI Assistant (KIRA)
+### 🤖 AI Assistant (KRA)
 - **Natural Language Interface**: Ask questions about your data in plain English
 - **Intelligent Analysis**: Get insights and summaries automatically
 - **Context-Aware**: Understands your current data and provides relevant suggestions
