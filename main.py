@@ -2,9 +2,9 @@ from modules import Scanner, Scrapper, Validator
 
 from utils import errhandler
 
-from secret import credentials
+from secret import user
 
-USER = credentials()
+USER = user()
 
 def pipeline():
     print("\n###\nWelcome to our Data Reconciliation Pipeline\n")
