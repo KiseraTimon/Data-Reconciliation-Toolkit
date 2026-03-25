@@ -22,7 +22,7 @@ from modules.reconciler import EnhancedReconciler
 from ai_assistant import AIAssistant
 from utils import errhandler, syshandler, times
 
-st.set_page_config(page_title="KIRA \u2014 KRA Reconciliation", page_icon="\u2696\ufe0f",
+st.set_page_config(page_title="KRA \u2014 Records Reconciler", page_icon="\u2696\ufe0f",
                    layout="wide", initial_sidebar_state="expanded")
 
 CSS = """
@@ -59,7 +59,7 @@ label{color:var(--muted)!important;font-size:.8rem;text-transform:uppercase;lett
 .stat-value{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;color:var(--ivory);line-height:1.1;}
 .stat-sub{font-size:.76rem;color:var(--muted);margin-top:.25rem;}.stat-gold{color:var(--gold);}
 .hero-banner{background:linear-gradient(135deg,var(--surface2) 0%,#1a1e24 100%);border:1px solid var(--border);border-radius:10px;padding:1.8rem 2.2rem;position:relative;overflow:hidden;margin-bottom:1.5rem;}
-.hero-banner::before{content:'KIRA';position:absolute;right:-12px;top:-18px;font-family:'Cormorant Garamond',serif;font-size:8rem;font-weight:700;color:rgba(200,168,75,.04);pointer-events:none;}
+.hero-banner::before{content:'KRA';position:absolute;right:-12px;top:-18px;font-family:'Cormorant Garamond',serif;font-size:8rem;font-weight:700;color:rgba(200,168,75,.04);pointer-events:none;}
 .hero-time{font-size:.78rem;color:var(--muted);margin-top:.2rem;}
 .step-bar{display:flex;align-items:center;margin-bottom:2rem;}
 .step-item{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
@@ -90,7 +90,42 @@ KRA_LOGO = """<svg width="44" height="44" viewBox="0 0 48 48" xmlns="http://www.
 </svg>"""
 
 
+import uuid
+
+@st.cache_resource
+def get_session_store():
+    """Stores user sessions globally across page refreshes."""
+    return {}
+
+def sync_session_state():
+    """Saves the current user's state to the global store."""
+    if "sid" in st.session_state and st.session_state.get('authenticated'):
+        store = get_session_store()
+        sid = st.session_state["sid"]
+        store[sid] = {
+            'authenticated': st.session_state.authenticated,
+            'scrapper': st.session_state.scrapper,
+            'step': st.session_state.step,
+            'reconciled_data': st.session_state.get('reconciled_data'),
+            'uploaded_df': st.session_state.get('uploaded_df'),
+            'case_num_col': st.session_state.get('case_num_col'),
+            'citation_col': st.session_state.get('citation_col'),
+            'chat_history': st.session_state.get('chat_history', []),
+            'temp_file_path': st.session_state.get('temp_file_path'),
+            'current_page': st.session_state.get('current_page', 'Dashboard'),
+        }
+
 def _init():
+    store = get_session_store()
+
+    if "sid" in st.query_params:
+        sid = st.query_params["sid"]
+        if sid in store:
+            st.session_state["sid"] = sid
+            for k, v in store[sid].items():
+                if k not in st.session_state:
+                    st.session_state[k] = v
+
     defaults = {
         'authenticated': False,
         'chat_history': [],
@@ -103,10 +138,12 @@ def _init():
         'reconciled_data': None,
         'ai_assistant': None,
         'workers': 8,
+        'current_page': 'Dashboard',
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
     if st.session_state.ai_assistant is None:
         try:
             st.session_state.ai_assistant = AIAssistant()
@@ -177,7 +214,7 @@ def login_page():
         logo_big = KRA_LOGO.replace('width="44"', 'width="62"').replace('height="44"', 'height="62"')
         st.markdown(
             f"""<div style='text-align:center;margin-bottom:2.2rem;'>{logo_big}
-            <div style='margin-top:1rem;font-family:"Cormorant Garamond",serif;font-size:2rem;font-weight:700;color:#f0ead8;letter-spacing:.1em;'>KIRA</div>
+            <div style='margin-top:1rem;font-family:"Cormorant Garamond",serif;font-size:2rem;font-weight:700;color:#f0ead8;letter-spacing:.1em;'>KRA</div>
             <div style='font-size:.72rem;color:#8a9099;letter-spacing:.18em;text-transform:uppercase;margin-top:3px;'>KRA Intelligent Reconciliation Assistant</div>
         </div>""",
             unsafe_allow_html=True,
@@ -209,7 +246,13 @@ def login_page():
             else:
                 with st.spinner("Authenticating\u2026"):
                     sc = Scrapper(username=username, password=password)
+
                     if sc.authenticator():
+
+                        sid = str(uuid.uuid4())
+                        st.session_state["sid"] = sid
+                        st.query_params["sid"] = sid
+
                         st.session_state.scrapper = sc
                         st.session_state.authenticated = True
                         st.rerun()
@@ -303,11 +346,22 @@ def sidebar_nav():
             <div style='height:1px;background:var(--border);margin:1rem 0;'></div>""",
             unsafe_allow_html=True,
         )
+
+        # 1. Define your options
+        options = ["Dashboard", "Reconciliation", "Reports", "AI Assistant", "Settings"]
+
+        # 2. Find the index of the current page (default to 0 if something goes wrong)
+        try:
+            default_idx = options.index(st.session_state.get('current_page', 'Dashboard'))
+        except ValueError:
+            default_idx = 0
+
+        # 3. Pass the dynamic index to the menu
         selected = option_menu(
             menu_title=None,
-            options=["Dashboard", "Reconciliation", "Reports", "AI Assistant", "Settings"],
+            options=options,
             icons=["grid", "arrow-repeat", "file-earmark-bar-graph", "robot", "gear"],
-            default_index=0,
+            default_index=default_idx,
             styles={
                 "container": {"padding": "0", "background-color": "transparent"},
                 "icon": {"color": "#8a9099", "font-size": "14px"},
@@ -315,20 +369,32 @@ def sidebar_nav():
                 "nav-link-selected": {"background-color": "rgba(200,168,75,0.1)", "color": "#c8a84b", "font-weight": "500"},
             },
         )
+
+        # 4. Save the user's selection to state so it gets picked up by sync_session_state()
+        st.session_state.current_page = selected
+
         st.markdown("<div style='height:1px;background:var(--border);margin:1rem 0;'></div>", unsafe_allow_html=True)
         if st.session_state.authenticated:
-            uname = st.session_state.scrapper.username if st.session_state.scrapper else "\u2014"
+            uname = st.session_state.scrapper.username if st.session_state.scrapper else "—"
             st.markdown(
                 f"""<div class='card-sm'><div style='font-size:.68rem;color:#8a9099;text-transform:uppercase;letter-spacing:.07em;'>Session</div>
-                <div style='color:#7ec89b;font-size:.83rem;margin-top:3px;'>\u25cf Connected</div>
+                <div style='color:#7ec89b;font-size:.83rem;margin-top:3px;'>● Connected</div>
                 <div style='font-size:.7rem;color:#8a9099;margin-top:2px;font-family:"Fira Code",monospace;'>{uname}</div></div>""",
                 unsafe_allow_html=True,
             )
             if st.button("Sign Out", use_container_width=True):
+                # Remove from global store and clear URL parameters
+                if "sid" in st.session_state:
+                    store = get_session_store()
+                    store.pop(st.session_state["sid"], None)
+                    st.query_params.clear()
+
                 for k in ['authenticated', 'scrapper', 'reconciled_data', 'uploaded_df', 'case_num_col', 'citation_col']:
                     st.session_state[k] = False if k == 'authenticated' else None
                 st.session_state.step = 1
+                st.session_state.current_page = 'Dashboard' # Reset page on logout
                 st.rerun()
+
     return selected
 
 
@@ -525,50 +591,56 @@ def reconciliation_page():
             st.error("Not connected to KRA iLaw. Please sign in first.")
             st.markdown("</div>", unsafe_allow_html=True)
             return
+
         workers = st.session_state.get('workers', 8)
-        pb = st.progress(0)
-        msg = st.empty()
-        sub = st.empty()
-        try:
-            msg.markdown("<span style='color:#c8a84b'>\u29e1 Extracting records from file\u2026</span>", unsafe_allow_html=True)
-            pb.progress(5)
-            scanner = Scanner(case_num_column=st.session_state.case_num_col, citation_column=st.session_state.citation_col)
-            file_data = scanner.file_extractor(sheet=st.session_state.uploaded_df)
-            if not file_data:
-                st.error("No data extracted.")
-                st.markdown("</div>", unsafe_allow_html=True)
-                return
-            sub.markdown(f"<span style='color:#8a9099;font-size:.85rem;'>\u2192 {len(file_data)} records</span>", unsafe_allow_html=True)
-            pb.progress(15)
-            msg.markdown(f"<span style='color:#c8a84b'>\u29e1 Searching KRA iLaw ({workers} parallel workers)\u2026</span>", unsafe_allow_html=True)
-            st.session_state.scrapper.data = file_data
-            extracted = parallel_extract(st.session_state.scrapper, file_data, workers=workers)
-            pb.progress(72)
-            sub.markdown(f"<span style='color:#8a9099;font-size:.85rem;'>\u2192 {len(extracted)} records searched</span>", unsafe_allow_html=True)
-            msg.markdown("<span style='color:#c8a84b'>\u29e1 Comparing & scoring\u2026</span>", unsafe_allow_html=True)
-            reconciled = st.session_state.scrapper.comparator(extracted_data=extracted)
-            st.session_state.reconciled_data = reconciled
-            pb.progress(100)
-            msg.markdown("<span style='color:#7ec89b'>\u2713 Reconciliation complete</span>", unsafe_allow_html=True)
-            sub.empty()
-            tot = len(reconciled)
-            ver = sum(1 for d in reconciled if d.get('status') == 'VERIFIED MATCH')
-            rev = sum(1 for d in reconciled if d.get('status') == 'REVIEW REQUIRED')
-            iss = sum(1 for d in reconciled if d.get('status') in ('MISMATCH', 'NOT FOUND'))
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Total", tot)
-            m2.metric("Verified", ver)
-            m3.metric("Review", rev)
-            m4.metric("Issues", iss)
-            st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-            if st.button("View Results \u2192", use_container_width=True):
+
+        # Guard: Only runs if we haven't processed this batch yet
+        if st.session_state.get('reconciled_data') is None:
+            pb = st.progress(0)
+            msg = st.empty()
+            sub = st.empty()
+            try:
+                msg.markdown("<span style='color:#c8a84b'>⧡ Extracting records from file…</span>", unsafe_allow_html=True)
+                pb.progress(5)
+                scanner = Scanner(case_num_column=st.session_state.case_num_col, citation_column=st.session_state.citation_col)
+                file_data = scanner.file_extractor(sheet=st.session_state.uploaded_df)
+                if not file_data:
+                    st.error("No data extracted.")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    return
+                sub.markdown(f"<span style='color:#8a9099;font-size:.85rem;'>→ {len(file_data)} records</span>", unsafe_allow_html=True)
+
+                pb.progress(15)
+                msg.markdown(f"<span style='color:#c8a84b'>⧡ Searching KRA iLaw ({workers} parallel workers)…</span>", unsafe_allow_html=True)
+                st.session_state.scrapper.data = file_data
+                extracted = parallel_extract(st.session_state.scrapper, file_data, workers=workers)
+
+                pb.progress(72)
+                sub.markdown(f"<span style='color:#8a9099;font-size:.85rem;'>→ {len(extracted)} records searched</span>", unsafe_allow_html=True)
+
+                msg.markdown("<span style='color:#c8a84b'>⧡ Comparing & scoring…</span>", unsafe_allow_html=True)
+                reconciled = st.session_state.scrapper.comparator(extracted_data=extracted)
+
+                # Saving the data
+                st.session_state.reconciled_data = reconciled
+
+                pb.progress(100)
+                msg.markdown("<span style='color:#7ec89b'>✓ Reconciliation complete</span>", unsafe_allow_html=True)
+                sub.empty()
+
+                # Auto Transition to results step
                 st.session_state.step = 4
                 st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"Error: {e}")
-            errhandler(e, log="reconciliation", path="app")
-            traceback.print_exc()
+
+            except Exception as e:
+                st.error(f"Error: {e}")
+                errhandler(e, log="reconciliation", path="app")
+                traceback.print_exc()
+        else:
+            # Fallback in case Streamlit re-renders Step 3 but data already exists
+            st.session_state.step = 4
+            st.rerun()
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     elif current == 4:
@@ -674,14 +746,14 @@ def reports_page():
 
 
 def ai_assistant_page():
-    st.markdown("<h1>AI Assistant \u2014 KIRA</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>AI Assistant \u2014 KRA</h1>", unsafe_allow_html=True)
     assistant = st.session_state.ai_assistant
     ac1, ac2 = st.columns([2, 1])
     with ac1:
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         chat_html = ""
         if not st.session_state.chat_history:
-            chat_html = "<div style='background:rgba(200,168,75,.06);border:1px solid rgba(200,168,75,.18);border-radius:0 8px 8px 8px;padding:.9rem 1rem;max-width:85%;color:#c8a84b;font-size:.88rem;'>Hello. I\u2019m KIRA \u2014 your legal reconciliation assistant. How can I help?</div>"
+            chat_html = "<div style='background:rgba(200,168,75,.06);border:1px solid rgba(200,168,75,.18);border-radius:0 8px 8px 8px;padding:.9rem 1rem;max-width:85%;color:#c8a84b;font-size:.88rem;'>Hello. I\u2019m KRA \u2014 your legal reconciliation assistant. How can I help?</div>"
         else:
             for m in st.session_state.chat_history:
                 if m['role'] == 'ai':
@@ -866,6 +938,9 @@ def main():
         "Settings": settings_page,
     }
     pages.get(selected, dashboard)()
+
+    # Auto-save state at the end of every interaction
+    sync_session_state()
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
