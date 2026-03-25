@@ -20,6 +20,7 @@ wheels/
 **secrets**
 **/config/**
 **.env
+secret.py
 
 # Reports
 **/reports/**
