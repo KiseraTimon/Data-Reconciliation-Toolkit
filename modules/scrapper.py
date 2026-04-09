@@ -712,6 +712,120 @@ class Scrapper:
             traceback.print_exc()
             return False
 
+    def generate_pdf_report(self, data: list, file_path: str):
+        """Generates a formatted landscape PDF report omitting redundant columns."""
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4, landscape
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from datetime import datetime
+        import os
+
+        # 1. Sort the data by case number ascending
+        sorted_data = sorted(data, key=lambda x: str(x.get('original_case', '')))
+
+        # 2. Setup text styles
+        styles = getSampleStyleSheet()
+        normal_style = styles['Normal']
+        normal_style.fontSize = 8
+        normal_style.leading = 10
+
+        # Color-coded Status Styles
+        status_styles = {
+            'VERIFIED MATCH': ParagraphStyle('Verified', parent=normal_style, textColor=colors.HexColor('#2e7d32'), fontName='Helvetica-Bold'),
+            'REVIEW REQUIRED': ParagraphStyle('Review', parent=normal_style, textColor=colors.HexColor('#f57f17'), fontName='Helvetica-Bold'),
+            'MISMATCH': ParagraphStyle('Mismatch', parent=normal_style, textColor=colors.HexColor('#c62828'), fontName='Helvetica-Bold'),
+            'NOT FOUND': ParagraphStyle('NotFound', parent=normal_style, textColor=colors.HexColor('#1565c0'), fontName='Helvetica-Bold'),
+        }
+
+        # 3. Define Table Header (Omitting excel_row, keywords, matches_found, etc.)
+        table_data = [['Case Number', 'Citation', 'KRA iLaw Match', 'Conf.', 'Status']]
+
+        # 4. Populate Table Rows
+        for row in sorted_data:
+            case_num = Paragraph(str(row.get('original_case', '')), normal_style)
+            citation = Paragraph(str(row.get('case_name', '')), normal_style)
+            kra_match = Paragraph(str(row.get('best_match_kra_citation', '')), normal_style)
+            conf = Paragraph(f"{row.get('confidence_score', '')}%" if row.get('confidence_score') else "", normal_style)
+
+            status_text = str(row.get('status', ''))
+            status_para = Paragraph(status_text, status_styles.get(status_text, normal_style))
+
+            table_data.append([case_num, citation, kra_match, conf, status_para])
+
+        # 5. Create Document File Path (.pdf instead of .xlsx)
+        pdf_path = file_path.replace('.xlsx', '.pdf') if file_path.endswith('.xlsx') else file_path + '.pdf'
+
+        # Setup Document boundaries
+        doc = SimpleDocTemplate(
+            pdf_path, 
+            pagesize=landscape(A4),
+            rightMargin=0.5*inch, leftMargin=0.5*inch, 
+            topMargin=1.2*inch, bottomMargin=0.8*inch
+        )
+
+        # Column widths for Landscape A4 (~10.69 usable inches)
+        col_widths = [2.0*inch, 3.4*inch, 3.4*inch, 0.6*inch, 1.2*inch]
+        t = Table(table_data, colWidths=col_widths, repeatRows=1)
+
+        # Base Table Style
+        t_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#c8a84b')), # KRA Gold header
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#dddddd')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ])
+
+        # Alternating Row Colors
+        for i in range(1, len(table_data)):
+            bg_color = colors.HexColor('#f9f9f9') if i % 2 == 0 else colors.white
+            t_style.add('BACKGROUND', (0, i), (-1, i), bg_color)
+
+        t.setStyle(t_style)
+
+        # 6. Define Header & Footer Drawing Function
+        def header_footer(canvas, doc):
+            canvas.saveState()
+
+            # Header
+            canvas.setFont('Helvetica-Bold', 14)
+            canvas.drawString(0.5*inch, landscape(A4)[1] - 0.6*inch, "KRA RECONCILIATION REPORT")
+
+            # Timestamp right-aligned
+            canvas.setFont('Helvetica', 9)
+            canvas.setFillColor(colors.HexColor('#555555'))
+            date_str = datetime.now().strftime('%d-%m-%Y %H:%M')
+            canvas.drawRightString(landscape(A4)[0] - 0.5*inch, landscape(A4)[1] - 0.6*inch, f"Generated: {date_str}")
+
+            # Golden line under header
+            canvas.setStrokeColor(colors.HexColor('#c8a84b'))
+            canvas.setLineWidth(1.5)
+            canvas.line(0.5*inch, landscape(A4)[1] - 0.8*inch, landscape(A4)[0] - 0.5*inch, landscape(A4)[1] - 0.8*inch)
+
+            # Footer
+            canvas.setFont('Helvetica', 8)
+            canvas.setFillColor(colors.HexColor('#888888'))
+            canvas.drawString(0.5*inch, 0.4*inch, "KRA Intelligent Reconciliation Assistant (KIRA)")
+            canvas.drawRightString(landscape(A4)[0] - 0.5*inch, 0.4*inch, f"Page {doc.page}")
+
+            canvas.restoreState()
+
+        # 7. Build and save PDF
+        try:
+            doc.build([t], onFirstPage=header_footer, onLaterPages=header_footer)
+            return pdf_path
+        except Exception as e:
+            print(f"PDF Generation Error: {e}")
+            return None
+
     def get_status_summary(self, data=None):
         if data is None:
             data = self.results
