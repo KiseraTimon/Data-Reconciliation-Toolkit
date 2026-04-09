@@ -2,18 +2,46 @@ from datetime import datetime
 from pathlib import Path
 import streamlit as st
 import plotly.graph_objects as go
+import pandas as pd
+
+def get_historical_stats():
+    """Reads all saved reports to aggregate historical all-time data."""
+    rdir = Path("reports")
+    total = verified = review = mismatch = nf = 0
+
+    if not rdir.exists():
+        return total, verified, review, mismatch, nf
+
+    for file in rdir.iterdir():
+        try:
+            # We only read the 'Status' column to keep the dashboard lightning fast
+            if file.suffix == '.xlsx':
+                df = pd.read_excel(file, usecols=['Status'])
+            elif file.suffix == '.csv':
+                df = pd.read_csv(file, usecols=['Status'])
+            else:
+                continue
+
+            total += len(df)
+            counts = df['Status'].value_counts()
+            verified += counts.get('VERIFIED MATCH', 0)
+            review += counts.get('REVIEW REQUIRED', 0)
+            mismatch += counts.get('MISMATCH', 0)
+            nf += counts.get('NOT FOUND', 0)
+        except Exception:
+            # Silently skip files that are corrupted, currently open, or missing the Status column
+            continue
+
+    return total, verified, review, mismatch, nf
 
 
 def dashboard():
     hour = datetime.now().hour
     greet = "Good morning" if hour < 12 else ("Good afternoon" if hour < 18 else "Good evening")
-    now = datetime.now().strftime("%A, %d %B %Y  \u00b7  %H:%M")
-    data = st.session_state.get('reconciled_data') or []
-    total = len(data)
-    verified = sum(1 for d in data if d.get('status') == 'VERIFIED MATCH')
-    review = sum(1 for d in data if d.get('status') == 'REVIEW REQUIRED')
-    mismatch = sum(1 for d in data if d.get('status') == 'MISMATCH')
-    nf = sum(1 for d in data if d.get('status') == 'NOT FOUND')
+    now = datetime.now().strftime("%A, %d %B %Y  ·  %H:%M")
+
+    # Fetch aggregated stats from the reports folder
+    total, verified, review, mismatch, nf = get_historical_stats()
 
     st.markdown(
         f"""<div class='hero-banner'><div style='font-size:.72rem;color:#8a9099;text-transform:uppercase;letter-spacing:.12em;'>{greet}</div>
@@ -31,27 +59,29 @@ def dashboard():
             unsafe_allow_html=True,
         )
 
-    if total:
-        stat(c1, "Total Records", total, "this session")
-        stat(c2, "Verified Match", verified, f"{verified/total*100:.1f}%", gold=True)
-        stat(c3, "Under Review", review, f"{review/total*100:.1f}%")
-        stat(c4, "Issues", mismatch + nf, f"{(mismatch+nf)/total*100:.1f}%")
+    # Update labels to reflect all-time data
+    if total > 0:
+        stat(c1, "Total Records", f"{total:,}", "all time processed")
+        stat(c2, "Verified Match", f"{verified:,}", f"{verified/total*100:.1f}%", gold=True)
+        stat(c3, "Under Review", f"{review:,}", f"{review/total*100:.1f}%")
+        stat(c4, "Issues", f"{(mismatch + nf):,}", f"{(mismatch+nf)/total*100:.1f}%")
     else:
         for c, l in zip([c1, c2, c3, c4], ["Total Records", "Verified Match", "Under Review", "Issues"]):
-            stat(c, l, "\u2014", "no data yet")
+            stat(c, l, "—", "no historical data")
 
     st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
     ch1, ch2 = st.columns([3, 2])
+
     with ch1:
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<h3>Session Results</h3>", unsafe_allow_html=True)
-        if total:
+        st.markdown("<h3>All-Time Results</h3>", unsafe_allow_html=True)
+        if total > 0:
             fig = go.Figure(
                 go.Bar(
                     x=['Verified', 'Review Req.', 'Mismatch', 'Not Found'],
                     y=[verified, review, mismatch, nf],
                     marker_color=['#5a8f6e', '#b8903a', '#c25f5f', '#4a7fa5'],
-                    text=[verified, review, mismatch, nf],
+                    text=[f"{v:,}" for v in [verified, review, mismatch, nf]],
                     textposition='outside',
                     textfont=dict(color='#8a9099', size=11),
                 )
@@ -65,12 +95,13 @@ def dashboard():
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.markdown("<p style='color:#8a9099;text-align:center;padding:3rem 0;'>Run a reconciliation to see results.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#8a9099;text-align:center;padding:3rem 0;'>Generate a report to see historical results.</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
     with ch2:
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<h3>Status Split</h3>", unsafe_allow_html=True)
-        if total:
+        st.markdown("<h3>Historical Status Split</h3>", unsafe_allow_html=True)
+        if total > 0:
             fig2 = go.Figure(
                 go.Pie(
                     labels=['Verified', 'Review', 'Mismatch', 'Not Found'],
@@ -85,7 +116,7 @@ def dashboard():
                 font=dict(color='#8a9099', family='DM Sans'), height=250,
                 margin=dict(l=0, r=0, t=10, b=0), showlegend=True,
                 legend=dict(orientation='v', font=dict(color='#8a9099', size=11), bgcolor='rgba(0,0,0,0)'),
-                annotations=[dict(text=str(total), x=.5, y=.5, font=dict(size=20, color='#f0ead8', family='Cormorant Garamond'), showarrow=False)],
+                annotations=[dict(text=f"{total:,}", x=.5, y=.5, font=dict(size=20, color='#f0ead8', family='Cormorant Garamond'), showarrow=False)],
             )
             st.plotly_chart(fig2, use_container_width=True)
         else:
@@ -95,26 +126,31 @@ def dashboard():
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<h3>Quick Actions</h3>", unsafe_allow_html=True)
     qa1, qa2, qa3 = st.columns(3)
+
     with qa1:
-        if st.button("\u2295  New Reconciliation", use_container_width=True):
+        if st.button("⊕  New Reconciliation", use_container_width=True):
+            # Updated to route properly with the new SPA state management
             st.session_state.step = 1
+            st.session_state.current_page = "Reconciliation"
+            st.rerun()
+
     with qa2:
         rdir = Path("reports")
         files = sorted(rdir.glob("*.xlsx"), key=lambda f: f.stat().st_mtime, reverse=True) if rdir.exists() else []
         if files:
             with open(files[0], 'rb') as fh:
                 st.download_button(
-                    "\u2b07  Last Report", fh.read(), file_name=files[0].name,
+                    "⬇  Last Report", fh.read(), file_name=files[0].name,
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True,
                 )
         else:
-            st.button("\u2b07  Last Report", disabled=True, use_container_width=True)
+            st.button("⬇  Last Report", disabled=True, use_container_width=True)
+
     with qa3:
-        if st.button("\u2715  Clear Session", use_container_width=True):
+        if st.button("✕  Clear Active Session", use_container_width=True):
             st.session_state.reconciled_data = None
             st.session_state.uploaded_df = None
             st.session_state.step = 1
-            st.rerun()
+            st.success("Active session memory cleared!")
     st.markdown("</div>", unsafe_allow_html=True)
-
