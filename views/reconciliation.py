@@ -229,35 +229,41 @@ def reconciliation_page():
             return [p.get(v, '') for v in s]
 
         st.dataframe(df_res.style.apply(color_status, subset=['Status'], axis=0), use_container_width=True, height=420)
+
         ec1, ec2, ec3 = st.columns(3)
         with ec1:
             st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-            if st.button("\u2b07 Excel Report", use_container_width=True):
+            if st.button("⬇ Download PDF Report", use_container_width=True):
                 fp = st.session_state.temp_file_path
                 if fp and os.path.exists(fp):
-                    with st.spinner("Building\u2026"):
-                        if st.session_state.scrapper.report(data=data, file_path=fp):
-                            st.success("Saved to /reports")
+                    with st.spinner("Generating PDF..."):
+                        pdf_path = st.session_state.scrapper.generate_pdf_report(data=data, file_path=fp)
+                        if pdf_path and os.path.exists(pdf_path):
+                            # Move the generated PDF to the /reports folder for the dashboard to see
+                            final_dir = Path("reports")
+                            final_dir.mkdir(exist_ok=True)
+                            final_path = final_dir / f"RECONCILED_{datetime.now().strftime('%d-%m-%Y_%H-%M')}.pdf"
+                            os.rename(pdf_path, final_path)
+
+                            st.success("✅ Saved to /reports")
                         else:
-                            st.error("Failed.")
+                            st.error("Failed to generate PDF.")
                 else:
                     st.error("Source file missing.")
             st.markdown('</div>', unsafe_allow_html=True)
         with ec2:
             csv_b = df_res.to_csv(index=False).encode()
             st.download_button(
-                "\u2b07 Export CSV", csv_b,
+                "⬇ Export CSV", csv_b,
                 file_name=f"reconciliation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv", use_container_width=True,
             )
         with ec3:
-            if st.button("\u2295 New Reconciliation", use_container_width=True):
+            if st.button("⊕ New Reconciliation", use_container_width=True):
                 st.session_state.step = 1
                 st.session_state.reconciled_data = None
                 st.session_state.uploaded_df = None
                 st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
 
 
 
